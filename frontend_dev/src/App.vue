@@ -1,4 +1,14 @@
 <script>
+async function post_data(url, json_object) {
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+    },
+    body: Object.entries(json_object).map(([k, v]) => `${k}=${v}`).join("&") // transforms to PHP post data
+  })
+}
+
 export default {
   data() {
     return {
@@ -62,51 +72,49 @@ export default {
   methods: {
     async fetch_data() {
       const base_url = `https://erewhon.xyz/book_thoughts/api/get_thought.php`;
-      const params = []
+      const params = {}
 
       if (this.query_data.author != "") {
         const author_id = this.authors_data.filter(item => item.author_name == this.query_data.author)[0].author_id
-        params.push(`author_id=${author_id}`)
+        params[`author_id`] = author_id;
       }
 
       if (this.query_data.title != "") {
         const book_id = this.books_data.filter(item => item.book_name == this.query_data.title)[0].book_id
-        params.push(`book_id=${book_id}`)
+        params[`book_id`] = book_id;
       }
 
       if (this.query_data.quote != "") {
-        params.push(`quote=${this.query_data.quote}`)
+        params[`quote`] = this.query_data.quote;
       }
 
       if (this.query_data.comment != "") {
-        params.push(`comment=${this.query_data.comment}`)
+        params[`comment`] = this.query_data.comment;
       }
 
       if (this.query_data.additional_info != "") {
-        params.push(`additional_info=${this.query_data.additional_info}`)
+        params[`additional_info`] = this.query_data.additional_info;
       }
 
       if (this.query_data.chapter != "") {
-        params.push(`chapter=${this.query_data.chapter}`)
+        params[`chapter`] = this.query_data.chapter;
       }
 
       if (this.query_data.chapter_section != "") {
-        params.push(`chapter_section=${this.query_data.chapter_section}`)
+        params[`chapter_section`] = this.query_data.chapter_section;
       }
 
       const potential_at_or_after = Math.round(this.query_data.at_or_after_date.getDate() / 1000);
       if (potential_at_or_after != 0) {
-        params.push(`at_or_after=${potential_at_or_after}`)
+        params[`at_or_after`] = potential_at_or_after;
       }
 
       const potential_before = Math.round(this.query_data.before_date.getDate() / 1000);
       if (potential_before != 0) {
-        params.push(`before=${potential_before}`)
+        params[`before`] = potential_before;
       }
 
-      const final_url = `${base_url}?${params.join("&")}`;
-
-      const fetched = await fetch(final_url);
+      const fetched = await post_data(base_url, params);
       const json_data = await fetched.json();
       this.output_data = json_data;
     },
@@ -126,7 +134,12 @@ export default {
       this.logged_in = text_data == "pass";
     },
     async try_login() {
-      const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/login.php?username=${encodeURIComponent(this.login_data.username)}&password=${encodeURIComponent(this.login_data.password)}`);
+      const post_form_data = {
+        'username': encodeURIComponent(this.login_data.username),
+        'password': encodeURIComponent(this.login_data.password)
+      };
+
+      const fetched = await post_data(`https://erewhon.xyz/book_thoughts/api/login.php`, post_form_data);
       const text_data = await fetched.text();
       this.logged_in = text_data == "pass";
 
@@ -144,22 +157,27 @@ export default {
       this.logged_in = false;
     },
     async delete_thought(id) {
-      await fetch(`https://erewhon.xyz/book_thoughts/api/delete_thought.php?id=${id}`);
+      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_thought.php`, { id });
       this.fetch_data();
     },
     async delete_book(id) {
-      await fetch(`https://erewhon.xyz/book_thoughts/api/delete_book.php?id=${id}`);
+      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_book.php`, { id });
       this.get_books();
       this.fetch_data();
     },
     async delete_author(id) {
-      await fetch(`https://erewhon.xyz/book_thoughts/api/delete_author.php?id=${id}`);
+      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_author.php`, { id });
       this.get_authors();
       this.get_books();
       this.fetch_data();
     },
     async add_author() {
-      const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/add_author.php?name=${encodeURIComponent(this.add_author_data.name)}&link=${encodeURIComponent(this.add_author_data.link)}`);
+      const post_form_data = {
+        'name': encodeURIComponent(this.add_author_data.name),
+        'link': encodeURIComponent(this.add_author_data.link)
+      };
+
+      const fetched = await post_data(`https://erewhon.xyz/book_thoughts/api/add_author.php`, post_form_data);
       const text_data = await fetched.text();
       this.add_author_modal = false;
       if (text_data == "fail") {
@@ -172,19 +190,20 @@ export default {
       }
     },
     async add_book() {
-      let author_param = "";
-      let link_param = "";
+      const params = {};
 
       if (this.add_book_data.author != "") {
-        author_param = `&author_id=${this.authors_data.filter(item => item.author_name == this.add_book_data.author)[0].author_id}`;
+        params['author_id'] = this.authors_data.filter(item => item.author_name == this.add_book_data.author)[0].author_id;
       }
 
       if (this.add_book_data.link != "") {
-        link_param = `&link=${encodeURIComponent(this.add_book_data.link)}`;
+        params['link'] = encodeURIComponent(this.add_book_data.link);
       }
 
+      params['name'] = encodeURIComponent(this.add_book_data.name);
+
       const fetched =
-        await fetch(`https://erewhon.xyz/book_thoughts/api/add_book.php?name=${encodeURIComponent(this.add_book_data.name)}${link_param}${author_param}`);
+        await post_data(`https://erewhon.xyz/book_thoughts/api/add_book.php`, params);
 
       const text_data = await fetched.text();
       this.add_book_modal = false;
@@ -199,30 +218,33 @@ export default {
       }
     },
     async add_thought() {
-      const book_id = this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id;
-      let base_url = `https://erewhon.xyz/book_thoughts/api/add_thought.php?book_id=${book_id}`;
+      const params = {
+        book_id: this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id
+      };
+
+      let base_url = `https://erewhon.xyz/book_thoughts/api/add_thought.php`;
 
       if (this.add_or_modify_thought_data.quote != "") {
-        base_url += `&quote=${this.add_or_modify_thought_data.quote}`;
+        params['quote'] = this.add_or_modify_thought_data.quote;
       }
 
       if (this.add_or_modify_thought_data.comment != "") {
-        base_url += `&comment=${this.add_or_modify_thought_data.comment}`;
+        params['comment'] = this.add_or_modify_thought_data.comment;
       }
 
       if (this.add_or_modify_thought_data.additional_info != "") {
-        base_url += `&additional_info=${this.add_or_modify_thought_data.additional_info}`;
+        params['additional_info'] = this.add_or_modify_thought_data.additional_info;
       }
 
       if (this.add_or_modify_thought_data.chapter != "") {
-        base_url += `&chapter=${this.add_or_modify_thought_data.chapter}`;
+        params['chapter'] = this.add_or_modify_thought_data.chapter;
       }
 
       if (this.add_or_modify_thought_data.chapter_section != "") {
-        base_url += `&chapter_section=${this.add_or_modify_thought_data.chapter_section}`;
+        params['chapter_section'] = this.add_or_modify_thought_data.chapter_section;
       }
 
-      const fetched = await fetch(base_url);
+      const fetched = await post_data(base_url, params);
       const text_data = await fetched.text();
       this.add_thought_modal = false;
 
@@ -248,30 +270,34 @@ export default {
       this.add_thought_modal = true;
     },
     async update_thought() {
-      const book_id = this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id;
-      let base_url = `https://erewhon.xyz/book_thoughts/api/update_thought.php?book_id=${book_id}&thought_id=${this.add_or_modify_thought_data.thought_id}`;
+      const params = {
+        book_id: this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id,
+        thought_id: this.add_or_modify_thought_data.thought_id
+      };
+
+      let base_url = `https://erewhon.xyz/book_thoughts/api/update_thought.php`;
 
       if (this.add_or_modify_thought_data.quote != "") {
-        base_url += `&quote=${this.add_or_modify_thought_data.quote}`;
+        params['quote'] = this.add_or_modify_thought_data.quote;
       }
 
       if (this.add_or_modify_thought_data.comment != "") {
-        base_url += `&comment=${this.add_or_modify_thought_data.comment}`;
+        params['comment'] = this.add_or_modify_thought_data.comment;
       }
 
       if (this.add_or_modify_thought_data.additional_info != "") {
-        base_url += `&additional_info=${this.add_or_modify_thought_data.additional_info}`;
+        params['additional_info'] = this.add_or_modify_thought_data.additional_info;
       }
 
       if (this.add_or_modify_thought_data.chapter != "") {
-        base_url += `&chapter=${this.add_or_modify_thought_data.chapter}`;
+        params['chapter'] = this.add_or_modify_thought_data.chapter;
       }
 
       if (this.add_or_modify_thought_data.chapter_section != "") {
-        base_url += `&chapter_section=${this.add_or_modify_thought_data.chapter_section}`;
+        params['chapter_section'] = this.add_or_modify_thought_data.chapter_section;
       }
 
-      const fetched = await fetch(base_url);
+      const fetched = await post_data(base_url, params);
       const text_data = await fetched.text();
       this.add_thought_modal = false;
 
@@ -286,7 +312,7 @@ export default {
     },
     open_add_thought_modal() {
       this.add_thought_modal = !this.add_thought_modal
-      this.update_thought_modal = !this.update_thought_modal
+      this.update_thought_modal = false;
     }
   },
   mounted() {
@@ -324,31 +350,32 @@ export default {
   padding: 5px;
 }
 
+.text_block {
+  margin: 10px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  line-height: 140%;
+}
+
 .comment_block {
   padding: 10px;
-  margin: 10px;
   background: rgb(249, 249, 249);
   color: #333;
   padding-bottom: 5px;
-  border-radius: 5px;
 }
 
 .quote_block {
   padding: 10px;
   background: rgb(249, 249, 249);
   color: #333;
-  margin: 10px;
   padding-bottom: 5px;
   border-bottom: 5px solid #27ae5f;
   font-family: 'Roboto Serif', serif;
-  border-radius: 5px;
 }
 
 .additional_info_block {
   padding: 5px;
   color: #fff;
-  margin: 10px;
-  border-radius: 5px;
 }
 
 .info_chip {
@@ -385,6 +412,36 @@ export default {
 .filtered_aux_card_data {
   text-align: center;
 }
+
+.va-dropdown__content {
+  padding: 0 !important;
+}
+
+.menu_item,
+.va-list-item__inner,
+.va-list-item {
+  width: 100%;
+  text-align: center;
+  display: block;
+  padding: 15px;
+  transition: .2s ease all;
+}
+
+.menu_item:hover {
+  background: #eee;
+}
+
+.va-list-item__inner {
+  display: inline !important;
+}
+
+.va-divider {
+  margin: 0 !important;
+}
+
+.va-input textarea {
+  white-space: pre-wrap;
+}
 </style>
 
 <template>
@@ -398,16 +455,6 @@ export default {
       </va-button>
     </template>
     <template #center>
-
-      <va-button outline class="mr-4" @click="current_view = 'thoughts'">
-        View thoughts
-      </va-button>
-      <va-button outline class="mr-4" @click="current_view = 'books'">
-        View books
-      </va-button>
-      <va-button outline class="mr-4" @click="current_view = 'authors'">
-        View authors
-      </va-button>
       <!-- the login stuff -->
       <va-navbar-item v-if="!logged_in">
         <va-modal v-model="show_login_modal" hide-default-actions overlay-opacity="0.2">
@@ -426,19 +473,33 @@ export default {
       </va-navbar-item>
     </template>
     <template #right>
-      <va-navbar-item v-if="logged_in">
-        <va-button outline class="mr-4" @click="add_author_modal = !add_author_modal">
-          Add new author
-        </va-button>
-
-        <va-button outline class="mr-4" @click="add_book_modal = !add_book_modal">
-          Add new book
-        </va-button>
-
-        <va-button outline class="mr-4" @click="open_add_thought_modal()">
-          Add new thought
-        </va-button>
-      </va-navbar-item>
+      <va-button-dropdown label="Menu" style="padding:0px">
+        <va-list style="padding:0px;width:100%;">
+          <va-list-item outline class="mr-4 menu_item" @click="current_view = 'thoughts'">
+            View thoughts
+          </va-list-item>
+          <va-divider></va-divider>
+          <va-list-item outline class="mr-4 menu_item" @click="current_view = 'books'">
+            View books
+          </va-list-item>
+          <va-divider></va-divider>
+          <va-list-item outline class="mr-4 menu_item" @click="current_view = 'authors'">
+            View authors
+          </va-list-item>
+          <va-divider v-if="logged_in"></va-divider>
+          <va-list-item v-if="logged_in" outline class="mr-4 menu_item" @click="add_author_modal = !add_author_modal">
+            Add new author
+          </va-list-item>
+          <va-divider v-if="logged_in"></va-divider>
+          <va-list-item v-if="logged_in" outline class="mr-4 menu_item" @click="add_book_modal = !add_book_modal">
+            Add new book
+          </va-list-item>
+          <va-divider v-if="logged_in"></va-divider>
+          <va-list-item v-if="logged_in" outline class="mr-4 menu_item" @click="open_add_thought_modal()">
+            Add new thought
+          </va-list-item>
+        </va-list>
+      </va-button-dropdown>
     </template>
   </va-navbar>
 
@@ -461,9 +522,9 @@ export default {
 
     <div class="filtered_data">
       <va-card class="display_card" v-for="item in output_data" :key="item" color="#3498db">
-        <div class="quote_block" v-if="item.quote">{{ item.quote }}</div>
-        <div class="comment_block" v-if="item.comment">{{ item.comment }}</div>
-        <div class="additional_info_block" v-if="item.additional_info">{{ item.additional_info }}</div>
+        <div class="text_block quote_block" v-if="item.quote">{{ item.quote }}</div>
+        <div class="text_block comment_block" v-if="item.comment">{{ item.comment }}</div>
+        <div class="text_block additional_info_block" v-if="item.additional_info">{{ item.additional_info }}</div>
         <va-chip class="info_chip" v-if="item.author_name">Author: {{ item.author_name }}</va-chip>
         <va-chip class="info_chip" v-if="item.book_name">Title: {{ item.book_name }}</va-chip>
         <va-chip class="info_chip" v-if="item.chapter">Chapter: {{ item.chapter }}</va-chip>
@@ -540,8 +601,7 @@ export default {
         v-model="add_or_modify_thought_data.book" searchable />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.quote" label="Quote" type="textarea" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.comment" label="Comment" type="textarea" />
-      <va-input class="mb-4" v-model="add_or_modify_thought_data.additional_info" label="Additional Info"
-        type="textarea" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.additional_info" label="Additional Info" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter" label="Chapter" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter_section" label="Chapter Section" />
     </template>

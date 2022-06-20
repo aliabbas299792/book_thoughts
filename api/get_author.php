@@ -9,14 +9,14 @@ FROM `authors`
 $where_conds = array();
 $params = array();
 
-if(isset($_GET['id'])) {
+if(isset($_POST['id'])) {
   array_push($where_conds, "`id`=?");
-  array_push($params, $_GET['id']);
+  array_push($params, $_POST['id']);
 }
 
-if(isset($_GET['name'])) {
+if(isset($_POST['name'])) {
   array_push($where_conds, "`name` LIKE ?");
-  array_push($params, "%" . $_GET['name'] . "%");
+  array_push($params, "%" . $_POST['name'] . "%");
 }
 
 if(!empty($where_conds)) {

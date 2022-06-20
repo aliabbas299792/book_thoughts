@@ -14,49 +14,49 @@ LEFT JOIN authors ON authors.id=books.author_id
 $where_conds = array();
 $params = array();
 
-if(isset($_GET['author_id'])) {
+if(isset($_POST['author_id'])) {
   array_push($where_conds, "`author_id`=?");
-  array_push($params, $_GET['author_id']);
+  array_push($params, $_POST['author_id']);
 }
 
-if(isset($_GET['book_id'])) {
+if(isset($_POST['book_id'])) {
   array_push($where_conds, "`book_id`=?");
-  array_push($params, $_GET['book_id']);
+  array_push($params, $_POST['book_id']);
 }
 
-if(isset($_GET['quote'])) {
+if(isset($_POST['quote'])) {
   array_push($where_conds, "`quote` LIKE ?");
-  array_push($params, "%" . $_GET['quote'] . "%");
+  array_push($params, "%" . $_POST['quote'] . "%");
 }
 
-if(isset($_GET['comment'])) {
+if(isset($_POST['comment'])) {
   array_push($where_conds, "`comment` LIKE ?");
-  array_push($params, "%" . $_GET['comment'] . "%");
+  array_push($params, "%" . $_POST['comment'] . "%");
 }
 
-if(isset($_GET['additional_info'])) {
+if(isset($_POST['additional_info'])) {
   array_push($where_conds, "`additional_info` LIKE ?");
-  array_push($params, "%" . $_GET['additional_info'] . "%");
+  array_push($params, "%" . $_POST['additional_info'] . "%");
 }
 
-if(isset($_GET['at_or_after'])) {
+if(isset($_POST['at_or_after'])) {
   array_push($where_conds, "`date_added`>=FROM_UNIXTIME(?)");
-  array_push($params, $_GET['at_or_after']);
+  array_push($params, $_POST['at_or_after']);
 }
 
-if(isset($_GET['before'])) {
+if(isset($_POST['before'])) {
   array_push($where_conds, "`date_added`<FROM_UNIXTIME(?)");
-  array_push($params, $_GET['before']);
+  array_push($params, $_POST['before']);
 }
 
-if(isset($_GET['chapter'])) {
+if(isset($_POST['chapter'])) {
   array_push($where_conds, "`chapter`=?");
-  array_push($params, $_GET['chapter']);
+  array_push($params, $_POST['chapter']);
 }
 
-if(isset($_GET['chapter_section'])) {
+if(isset($_POST['chapter_section'])) {
   array_push($where_conds, "`chapter_section`=?");
-  array_push($params, $_GET['chapter_section']);
+  array_push($params, $_POST['chapter_section']);
 }
 
 if(!empty($where_conds)) {
