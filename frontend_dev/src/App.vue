@@ -161,7 +161,7 @@ export default {
     async is_logged_in() {
       const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/verify_user.php`);
       const text_data = await fetched.text();
-      this.logged_in = text_data == "pass";
+      this.logged_in = text_data != "fail";
     },
     async try_login() {
       const post_form_data = {

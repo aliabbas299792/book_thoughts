@@ -1,7 +1,10 @@
 <?php
 include 'db.link.php';
 
-session_start();
+if (!isset($_SESSION)){
+  session_start();
+}
+
 if(urldecode($_POST['username']) != $admin_username || urldecode($_POST['password']) != $admin_password) {
   echo "fail";
 } else {
