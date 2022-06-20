@@ -6,7 +6,7 @@ SELECT
   author_id, authors.name AS author_name, authors.link AS author_link,
   books.id AS book_id, books.name AS book_name, books.link AS book_link
 FROM `books`
-INNER JOIN `authors` ON authors.id=author_id
+LEFT JOIN `authors` ON authors.id=author_id
 ";
 $where_conds = array();
 $params = array();

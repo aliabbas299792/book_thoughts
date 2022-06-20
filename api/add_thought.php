@@ -7,8 +7,8 @@ if(!isset($_GET['book_id']) || (!isset($_GET['quote']) && !isset($_GET['comment'
   exit();
 }
 
-$insert = $db->prepare('INSERT INTO `book_thoughts` (`name`, `book_id`, `quote`, `comment`, `additional_info`, `chapter`, `chapter_section`) (?, ?, ?, ?, ?, ?, ?, ?)');
-if($insert->execute([$_GET['quote'], $_GET['book_id'], $_GET['quote'], $_GET['comment'], $_GET['additional_info']], $_GET['chapter'], $_GET['chapter_section'])) {
+$insert = $db->prepare('INSERT INTO `book_thoughts` (`book_id`, `quote`, `comment`, `additional_info`, `chapter`, `chapter_section`) VALUES (?, ?, ?, ?, ?, ?)');
+if($insert->execute([urldecode($_GET['book_id']), urldecode($_GET['quote']), urldecode($_GET['comment']), urldecode($_GET['additional_info']), urldecode($_GET['chapter']), urldecode($_GET['chapter_section'])])) {
   echo "pass";
 } else {
   echo "fail";

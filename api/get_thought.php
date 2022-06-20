@@ -8,8 +8,8 @@ SELECT
   books.id AS book_id, books.name AS book_name, books.link AS book_link,
   quote, comment, additional_info, chapter, chapter_section, date_added
 FROM `book_thoughts`
-INNER JOIN books ON books.id=book_thoughts.book_id
-INNER JOIN authors ON authors.id=books.author_id
+LEFT JOIN books ON books.id=book_thoughts.book_id
+LEFT JOIN authors ON authors.id=books.author_id
 ";
 $where_conds = array();
 $params = array();

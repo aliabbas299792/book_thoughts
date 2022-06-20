@@ -1,6 +1,7 @@
 <?php
 include 'db.link.php';
 
+session_start();
 if(urldecode($_GET['username']) != $admin_username || urldecode($_GET['password']) != $admin_password) {
   echo "fail";
 } else {

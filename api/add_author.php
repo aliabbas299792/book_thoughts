@@ -7,8 +7,8 @@ if(!isset($_GET['name'])) {
   exit();
 }
 
-$insert = $db->prepare('INSERT INTO `authors` (`name`, `link`) (?, ?)');
-if($insert->execute([$_GET['name'], $_GET['link']])) {
+$insert = $db->prepare('INSERT INTO `authors` (`name`, `link`) VALUES (?, ?)');
+if($insert->execute([urldecode($_GET['name']), urldecode($_GET['link'])])) {
   echo "pass";
 } else {
   echo "fail";
