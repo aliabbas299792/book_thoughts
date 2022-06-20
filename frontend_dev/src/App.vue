@@ -38,15 +38,17 @@ export default {
       },
       add_book_modal: false,
 
-      add_thought_data: {
+      add_or_modify_thought_data: {
         book: "",
         quote: "",
         comment: "",
         additional_info: "",
         chapter: "",
-        chapter_section: ""
+        chapter_section: "",
+        thought_id: -1
       },
-      add_thought_modal: false
+      add_thought_modal: false,
+      update_thought_modal: false
     }
   },
   watch: {
@@ -202,27 +204,27 @@ export default {
       }
     },
     async add_thought() {
-      const book_id = this.books_data.filter(item => item.book_name == this.add_thought_data.book)[0]?.book_id;
+      const book_id = this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id;
       let base_url = `https://erewhon.xyz/book_thoughts/api/add_thought.php?book_id=${book_id}`;
 
-      if (this.add_thought_data.quote != "") {
-        base_url += `&quote=${this.add_thought_data.quote}`;
+      if (this.add_or_modify_thought_data.quote != "") {
+        base_url += `&quote=${this.add_or_modify_thought_data.quote}`;
       }
 
-      if (this.add_thought_data.comment != "") {
-        base_url += `&comment=${this.add_thought_data.comment}`;
+      if (this.add_or_modify_thought_data.comment != "") {
+        base_url += `&comment=${this.add_or_modify_thought_data.comment}`;
       }
 
-      if (this.add_thought_data.additional_info != "") {
-        base_url += `&additional_info=${this.add_thought_data.additional_info}`;
+      if (this.add_or_modify_thought_data.additional_info != "") {
+        base_url += `&additional_info=${this.add_or_modify_thought_data.additional_info}`;
       }
 
-      if (this.add_thought_data.chapter != "") {
-        base_url += `&chapter=${this.add_thought_data.chapter}`;
+      if (this.add_or_modify_thought_data.chapter != "") {
+        base_url += `&chapter=${this.add_or_modify_thought_data.chapter}`;
       }
 
-      if (this.add_thought_data.chapter_section != "") {
-        base_url += `&chapter_section=${this.add_thought_data.chapter_section}`;
+      if (this.add_or_modify_thought_data.chapter_section != "") {
+        base_url += `&chapter_section=${this.add_or_modify_thought_data.chapter_section}`;
       }
 
       const fetched = await fetch(base_url);
@@ -237,6 +239,59 @@ export default {
       } else {
         this.fetch_data();
       }
+    },
+    modify_thought(item) {
+      this.add_or_modify_thought_data.book = item.book_name
+      this.add_or_modify_thought_data.comment = item.comment
+      this.add_or_modify_thought_data.quote = item.quote
+      this.add_or_modify_thought_data.additional_info = item.additional_info
+      this.add_or_modify_thought_data.chapter = item.chapter
+      this.add_or_modify_thought_data.chapter_section = item.chapter_section
+      this.add_or_modify_thought_data.thought_id = item.thought_id
+
+      this.update_thought_modal = true;
+      this.add_thought_modal = true;
+    },
+    async update_thought() {
+      const book_id = this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id;
+      let base_url = `https://erewhon.xyz/book_thoughts/api/update_thought.php?book_id=${book_id}&thought_id=${this.add_or_modify_thought_data.thought_id}`;
+
+      if (this.add_or_modify_thought_data.quote != "") {
+        base_url += `&quote=${this.add_or_modify_thought_data.quote}`;
+      }
+
+      if (this.add_or_modify_thought_data.comment != "") {
+        base_url += `&comment=${this.add_or_modify_thought_data.comment}`;
+      }
+
+      if (this.add_or_modify_thought_data.additional_info != "") {
+        base_url += `&additional_info=${this.add_or_modify_thought_data.additional_info}`;
+      }
+
+      if (this.add_or_modify_thought_data.chapter != "") {
+        base_url += `&chapter=${this.add_or_modify_thought_data.chapter}`;
+      }
+
+      if (this.add_or_modify_thought_data.chapter_section != "") {
+        base_url += `&chapter_section=${this.add_or_modify_thought_data.chapter_section}`;
+      }
+
+      const fetched = await fetch(base_url);
+      const text_data = await fetched.text();
+      this.add_thought_modal = false;
+
+      if (text_data == "fail") {
+        this.show_error_modal = true;
+        setTimeout(() => {
+          this.show_error_modal = false
+        }, 500)
+      } else {
+        this.fetch_data();
+      }
+    },
+    open_add_thought_modal() {
+      this.add_thought_modal = !this.add_thought_modal
+      this.update_thought_modal = !this.update_thought_modal
     }
   },
   mounted() {
@@ -310,6 +365,16 @@ export default {
   float: right;
 }
 
+.edit_chip {
+  margin: 5px;
+  float: right;
+  color: #fff !important;
+}
+
+.title {
+  width: 500px;
+}
+
 .aux_data_view_title {
   color: #fff;
   padding: 5px;
@@ -375,7 +440,7 @@ export default {
           Add new book
         </va-button>
 
-        <va-button outline class="mr-4" @click="add_thought_modal = !add_thought_modal">
+        <va-button outline class="mr-4" @click="open_add_thought_modal()">
           Add new thought
         </va-button>
       </va-navbar-item>
@@ -411,6 +476,7 @@ export default {
         <va-chip class="info_chip" v-if="item.date_added">Added: {{ item.date_added }}</va-chip>
         <va-chip class="delete_chip" color="danger" v-if="logged_in" @click="delete_thought(item.thought_id)">Delete
         </va-chip>
+        <va-chip class="edit_chip" color="warning" v-if="logged_in" @click="modify_thought(item)">Modify</va-chip>
       </va-card>
     </div>
   </div>
@@ -476,16 +542,19 @@ export default {
       <h2 class="title">Add thought</h2>
       <br>
       <va-select class="mb-4" label="Book" :options="books_data.map(item => item.book_name)"
-        v-model="add_thought_data.book" searchable />
-      <va-input class="mb-4" v-model="add_thought_data.quote" label="Quote" />
-      <va-input class="mb-4" v-model="add_thought_data.comment" label="Comment" />
-      <va-input class="mb-4" v-model="add_thought_data.additional_info" label="Additional Info" />
-      <va-input class="mb-4" v-model="add_thought_data.chapter" label="Chapter" />
-      <va-input class="mb-4" v-model="add_thought_data.chapter_section" label="Chapter Section" />
+        v-model="add_or_modify_thought_data.book" searchable />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.quote" label="Quote" type="textarea" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.comment" label="Comment" type="textarea" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.additional_info" label="Additional Info" type="textarea" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter" label="Chapter" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter_section" label="Chapter Section" />
     </template>
     <template #footer>
-      <va-button @click="add_thought">
+      <va-button @click="add_thought" v-if="!update_thought_modal">
         Add
+      </va-button>
+      <va-button @click="update_thought" v-if="update_thought_modal">
+        Update
       </va-button>
     </template>
   </va-modal>
