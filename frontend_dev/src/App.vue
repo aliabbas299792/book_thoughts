@@ -9,13 +9,32 @@ async function post_data(url, json_object) {
   })
 }
 
+function paginate(data, entries_per_page) {
+  const pages = [];
+  while (data.length > 0) {
+    pages.push(data.splice(0, entries_per_page))
+  }
+  return pages;
+}
+
+const THOUGHTS_PER_PAGE = 20;
+const AUTHORS_PER_PAGE = 100;
+const BOOKS_PER_PAGE = 100;
+
 export default {
   data() {
     return {
       current_view: "thoughts",
-      output_data: [],
-      authors_data: [],
-      books_data: [],
+
+      thoughts_data_paged: [],
+      thoughts_page_data_num: 1,
+
+      authors_data_paged: [],
+      authors_page_data_num: 1,
+
+      books_data_paged: [],
+      books_page_data_num: 1,
+
       query_data: {
         author: "",
         title: "",
@@ -69,6 +88,14 @@ export default {
       deep: true
     }
   },
+  computed: {
+    books_data() {
+      return this.books_data_paged.flat()
+    },
+    authors_data() {
+      return this.authors_data_paged.flat()
+    }
+  },
   methods: {
     async fetch_data() {
       const base_url = `https://erewhon.xyz/book_thoughts/api/get_thought.php`;
@@ -116,17 +143,20 @@ export default {
 
       const fetched = await post_data(base_url, params);
       const json_data = await fetched.json();
-      this.output_data = json_data;
+
+      this.thoughts_data_paged = paginate(json_data, THOUGHTS_PER_PAGE);
     },
     async get_authors() {
       const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/get_author.php`);
       const json_data = await fetched.json();
-      this.authors_data = json_data;
+
+      this.authors_data_paged = paginate(json_data, AUTHORS_PER_PAGE)
     },
     async get_books() {
       const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/get_book.php`);
       const json_data = await fetched.json();
-      this.books_data = json_data;
+
+      this.books_data_paged = paginate(json_data, BOOKS_PER_PAGE)
     },
     async is_logged_in() {
       const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/verify_user.php`);
@@ -442,6 +472,18 @@ export default {
 .va-input textarea {
   white-space: pre-wrap;
 }
+
+.pagination {
+  margin: 30px auto 10px auto;
+}
+
+.pagination_bottom {
+  margin: 30px auto 10px auto;
+}
+
+.va-button--no-label {
+  background-color: unset !important;
+}
 </style>
 
 <template>
@@ -520,8 +562,12 @@ export default {
       </div>
     </va-collapse>
 
+    <va-pagination class="pagination" v-model="thoughts_page_data_num" :visible-pages="4"
+      :pages="thoughts_data_paged.length" v-if="thoughts_data_paged.length > 1" />
+
     <div class="filtered_data">
-      <va-card class="display_card" v-for="item in output_data" :key="item" color="#3498db">
+      <va-card class="display_card" v-for="item in thoughts_data_paged[thoughts_page_data_num - 1]" :key="item"
+        color="#3498db">
         <div class="text_block quote_block" v-if="item.quote">{{ item.quote }}</div>
         <div class="text_block comment_block" v-if="item.comment">{{ item.comment }}</div>
         <div class="text_block additional_info_block" v-if="item.additional_info">{{ item.additional_info }}</div>
@@ -535,11 +581,19 @@ export default {
         <va-chip class="edit_chip" color="warning" v-if="logged_in" @click="modify_thought(item)">Modify</va-chip>
       </va-card>
     </div>
+
+    <va-pagination class="pagination_bottom" v-model="thoughts_page_data_num" :visible-pages="4"
+      :pages="thoughts_data_paged.length" v-if="thoughts_data_paged.length > 1" />
   </div>
 
+
   <div class="page" v-if="current_view == 'authors'">
+    <va-pagination class="pagination" v-model="authors_page_data_num" :visible-pages="4"
+      :pages="authors_data_paged.length" v-if="authors_data_paged.length > 1" />
+
     <div class="filtered_data filtered_aux_card_data">
-      <va-card class="display_card aux_data_card" v-for="item in authors_data" :key="item" color="#3498db">
+      <va-card class="display_card aux_data_card" v-for="item in authors_data_paged[authors_page_data_num - 1]"
+        :key="item" color="#3498db">
         <h2 class="aux_data_view_title" v-if="item.author_name">{{ item.author_name }}</h2>
         <va-chip class="info_chip" v-if="item.author_link" :href="item.author_link" target="_blank">Author Link
         </va-chip>
@@ -547,11 +601,18 @@ export default {
         </va-chip>
       </va-card>
     </div>
+
+    <va-pagination class="pagination_bottom" v-model="authors_page_data_num" :visible-pages="4"
+      :pages="authors_data_paged.length" v-if="authors_data_paged.length > 1" />
   </div>
 
   <div class="page" v-if="current_view == 'books'">
+    <va-pagination class="pagination" v-model="books_page_data_num" :visible-pages="4" :pages="books_data_paged.length"
+      v-if="books_data_paged.length > 1" />
+
     <div class="filtered_data filtered_aux_card_data">
-      <va-card class="display_card aux_data_card" v-for="item in books_data" :key="item" color="#3498db">
+      <va-card class="display_card aux_data_card" v-for="item in books_data_paged[books_page_data_num - 1]" :key="item"
+        color="#3498db">
         <h2 class="aux_data_view_title" v-if="item.book_name">{{ item.book_name }}</h2>
         <va-chip class="info_chip" v-if="item.author_name">By: {{ item.author_name }}</va-chip>
         <va-chip class="info_chip" v-if="item.book_link" :href="item.book_link" target="_blank">Book Link</va-chip>
@@ -561,6 +622,9 @@ export default {
         </va-chip>
       </va-card>
     </div>
+
+    <va-pagination class="pagination_bottom" v-model="books_page_data_num" :visible-pages="4"
+      :pages="books_data_paged.length" v-if="books_data_paged.length > 1" />
   </div>
 
   <va-modal v-model="add_author_modal" hide-default-actions overlay-opacity="0.2" size="large">
