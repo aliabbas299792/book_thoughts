@@ -168,7 +168,7 @@ export default {
           this.show_error_modal = false
         }, 500)
       } else {
-        this.get_authors();
+        setTimeout(() => this.get_authors(), 500);
       }
     },
     async add_book() {
@@ -180,16 +180,11 @@ export default {
       }
 
       if (this.add_book_data.link != "") {
-        link_param = `&link=${encodeURIComponent(this.add_author_data.link)}`;
+        link_param = `&link=${encodeURIComponent(this.add_book_data.link)}`;
       }
 
       const fetched =
-        await fetch(
-          `https://erewhon.xyz/book_thoughts/api/add_book.php?
-            name=${encodeURIComponent(this.add_author_data.name)}
-            ${link_param}
-            ${author_param}`
-        );
+        await fetch(`https://erewhon.xyz/book_thoughts/api/add_book.php?name=${encodeURIComponent(this.add_book_data.name)}${link_param}${author_param}`);
 
       const text_data = await fetched.text();
       this.add_book_modal = false;
@@ -545,7 +540,8 @@ export default {
         v-model="add_or_modify_thought_data.book" searchable />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.quote" label="Quote" type="textarea" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.comment" label="Comment" type="textarea" />
-      <va-input class="mb-4" v-model="add_or_modify_thought_data.additional_info" label="Additional Info" type="textarea" />
+      <va-input class="mb-4" v-model="add_or_modify_thought_data.additional_info" label="Additional Info"
+        type="textarea" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter" label="Chapter" />
       <va-input class="mb-4" v-model="add_or_modify_thought_data.chapter_section" label="Chapter Section" />
     </template>
