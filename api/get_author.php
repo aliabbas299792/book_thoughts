@@ -6,6 +6,9 @@ SELECT
   id AS author_id, name AS author_name, link AS author_link
 FROM `authors`
 ";
+$sqlEnd = "
+ORDER BY author_id desc
+";
 $where_conds = array();
 $params = array();
 
@@ -23,6 +26,8 @@ if(!empty($where_conds)) {
   $sql .= " WHERE ";
   $sql .= implode(" AND ", $where_conds);
 }
+
+$sql .= $sqlEnd;
 
 $get = $db->prepare($sql);
 $status = $get->execute($params);

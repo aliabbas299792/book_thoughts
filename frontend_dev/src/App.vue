@@ -44,7 +44,7 @@ export default {
         chapter: "",
         chapter_section: "",
         at_or_after_date: new Date(0),
-        before_date: new Date(0)
+        before_date: new Date()
       },
       logged_in: false,
       show_login_modal: false,
@@ -98,7 +98,7 @@ export default {
   },
   methods: {
     async fetch_data() {
-      const base_url = `https://erewhon.xyz/book_thoughts/api/get_thought.php`;
+      const base_url = `/book_thoughts/api/get_thought.php`;
       const params = {}
 
       if (this.query_data.author != "") {
@@ -147,19 +147,19 @@ export default {
       this.thoughts_data_paged = paginate(json_data, THOUGHTS_PER_PAGE);
     },
     async get_authors() {
-      const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/get_author.php`);
+      const fetched = await fetch(`/book_thoughts/api/get_author.php`);
       const json_data = await fetched.json();
 
       this.authors_data_paged = paginate(json_data, AUTHORS_PER_PAGE)
     },
     async get_books() {
-      const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/get_book.php`);
+      const fetched = await fetch(`/book_thoughts/api/get_book.php`);
       const json_data = await fetched.json();
 
       this.books_data_paged = paginate(json_data, BOOKS_PER_PAGE)
     },
     async is_logged_in() {
-      const fetched = await fetch(`https://erewhon.xyz/book_thoughts/api/verify_user.php`);
+      const fetched = await fetch(`/book_thoughts/api/verify_user.php`);
       const text_data = await fetched.text();
       this.logged_in = text_data != "fail";
     },
@@ -169,7 +169,7 @@ export default {
         'password': encodeURIComponent(this.login_data.password)
       };
 
-      const fetched = await post_data(`https://erewhon.xyz/book_thoughts/api/login.php`, post_form_data);
+      const fetched = await post_data(`/book_thoughts/api/login.php`, post_form_data);
       const text_data = await fetched.text();
       this.logged_in = text_data == "pass";
 
@@ -183,20 +183,20 @@ export default {
       }
     },
     async logout() {
-      await fetch(`https://erewhon.xyz/book_thoughts/api/logout.php`);
+      await fetch(`/book_thoughts/api/logout.php`);
       this.logged_in = false;
     },
     async delete_thought(id) {
-      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_thought.php`, { id });
+      await post_data(`/book_thoughts/api/delete_thought.php`, { id });
       this.fetch_data();
     },
     async delete_book(id) {
-      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_book.php`, { id });
+      await post_data(`/book_thoughts/api/delete_book.php`, { id });
       this.get_books();
       this.fetch_data();
     },
     async delete_author(id) {
-      await post_data(`https://erewhon.xyz/book_thoughts/api/delete_author.php`, { id });
+      await post_data(`/book_thoughts/api/delete_author.php`, { id });
       this.get_authors();
       this.get_books();
       this.fetch_data();
@@ -207,7 +207,7 @@ export default {
         'link': encodeURIComponent(this.add_author_data.link)
       };
 
-      const fetched = await post_data(`https://erewhon.xyz/book_thoughts/api/add_author.php`, post_form_data);
+      const fetched = await post_data(`/book_thoughts/api/add_author.php`, post_form_data);
       const text_data = await fetched.text();
       this.add_author_modal = false;
       if (text_data == "fail") {
@@ -233,7 +233,7 @@ export default {
       params['name'] = encodeURIComponent(this.add_book_data.name);
 
       const fetched =
-        await post_data(`https://erewhon.xyz/book_thoughts/api/add_book.php`, params);
+        await post_data(`/book_thoughts/api/add_book.php`, params);
 
       const text_data = await fetched.text();
       this.add_book_modal = false;
@@ -252,7 +252,7 @@ export default {
         book_id: this.books_data.filter(item => item.book_name == this.add_or_modify_thought_data.book)[0]?.book_id
       };
 
-      let base_url = `https://erewhon.xyz/book_thoughts/api/add_thought.php`;
+      let base_url = `/book_thoughts/api/add_thought.php`;
 
       if (this.add_or_modify_thought_data.quote != "") {
         params['quote'] = this.add_or_modify_thought_data.quote;
@@ -305,7 +305,7 @@ export default {
         thought_id: this.add_or_modify_thought_data.thought_id
       };
 
-      let base_url = `https://erewhon.xyz/book_thoughts/api/update_thought.php`;
+      let base_url = `/book_thoughts/api/update_thought.php`;
 
       if (this.add_or_modify_thought_data.quote != "") {
         params['quote'] = this.add_or_modify_thought_data.quote;

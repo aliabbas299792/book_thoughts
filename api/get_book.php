@@ -8,6 +8,9 @@ SELECT
 FROM `books`
 LEFT JOIN `authors` ON authors.id=author_id
 ";
+$sqlEnd = "
+ORDER BY book_id desc
+";
 $where_conds = array();
 $params = array();
 
@@ -30,6 +33,8 @@ if(!empty($where_conds)) {
   $sql .= " WHERE ";
   $sql .= implode(" AND ", $where_conds);
 }
+
+$sql .= $sqlEnd;
 
 $get = $db->prepare($sql);
 $status = $get->execute($params);

@@ -11,6 +11,9 @@ FROM `book_thoughts`
 LEFT JOIN books ON books.id=book_thoughts.book_id
 LEFT JOIN authors ON authors.id=books.author_id
 ";
+$sqlEnd = "
+ORDER BY date_added desc
+";
 $where_conds = array();
 $params = array();
 
@@ -63,6 +66,8 @@ if(!empty($where_conds)) {
   $sql .= " WHERE ";
   $sql .= implode(" AND ", $where_conds);
 }
+
+$sql .= $sqlEnd;
 
 $get = $db->prepare($sql);
 $status = $get->execute($params);
